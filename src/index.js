@@ -1,11 +1,24 @@
-require("dotenv").config();
-
+import express from "express";
 import mongoose from "mongoose";
-import { DB_NAME } from "./constants";
-import connectDB from "./db/index";
-
-connectDB();
-
+import connectDB from "./db/index.js";
+configDotenv.config({
+  path: "./env",
+});
+//application lvl error
+app.on("error:", () => {
+  console.log("Error has occured:", error);
+  throw error;
+});
+//db connection
+connectDB()
+  .then(() => {
+    app.listen(process.env.PORT || 3000, () => {
+      console.log("Server is running at : ${process.env.PORT}");
+    });
+  })
+  .catch((error) => {
+    console.log("Connection failed", error);
+  });
 // import express from "express";
 // const app = express()(async () => {
 //   try {
