@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt"; //Load hash from your password DB.
-import Jsonwebtoken from "jsonwebtoken"; //(beerer token)authentication and secure data exchange in web applications and APIs.
+import Jsonwebtoken from "jsonwebtoken"; //(bearer token)authentication and secure data exchange in web applications and APIs.
 const userSchema = new Schema(
   {
     //model
