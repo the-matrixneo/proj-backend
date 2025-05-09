@@ -1,9 +1,9 @@
 const asynchandler = (reqHandler) => {
-  (err, req, res, next) => {
+  return (err, req, res, next) => {
     Promise.resolve(reqHandler(req, res, next)).catch((err) => next(err));
   };
 };
-export { asynch };
+export default asynchandler;
 //wrap asynchronous route handlers not repetitive try-catch blocks
 //   try {
 //     await fn(req, res, next);

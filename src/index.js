@@ -1,3 +1,4 @@
+import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
 import connectDB from "./db/index.js";
@@ -13,7 +14,7 @@ app.on("error:", () => {
 connectDB()
   .then(() => {
     app.listen(process.env.PORT || 3000, () => {
-      console.log("Server is running at : ${process.env.PORT}");
+      console.log(`Server is running at : ${process.env.PORT}`);
     });
   })
   .catch((error) => {

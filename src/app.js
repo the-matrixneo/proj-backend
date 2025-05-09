@@ -17,4 +17,11 @@ app.use(
 app.use(express.urlencoded()); //parses string , converts it into a js object (HTML forms)
 app.use(express.static("public")); //enables the server to deliver files i.e html,images,pdf
 app.use(cookieParser());
+
+// routes import
+import userRouter from "./routes/user.route.js";
+
+//routes declaration
+app.use("/api/v1/users", userRouter);
+// https://localhost/register
 export default app;
