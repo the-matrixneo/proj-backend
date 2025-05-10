@@ -6,7 +6,7 @@ router.route("/register").post(
   //middleware injected
   upload.fields([
     {
-      name: "avatr",
+      name: "avatar",
       maxCount: 1,
     },
 

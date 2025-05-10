@@ -3,7 +3,7 @@ const asynchandler = (reqHandler) => {
     Promise.resolve(reqHandler(req, res, next)).catch((err) => next(err));
   };
 };
-export default asynchandler;
+export { asynchandler };
 //wrap asynchronous route handlers not repetitive try-catch blocks
 //   try {
 //     await fn(req, res, next);
