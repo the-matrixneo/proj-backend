@@ -1,14 +1,14 @@
 import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
-import connectDB from "./db/index.js";
+import connectDB from "../src/db/index.js";
 configDotenv.config({
   path: "./env",
 });
 //application lvl error
 app.on("error:", () => {
   console.log("Error has occured:", error);
-  throw error;
+  throw error();
 });
 //db connection
 connectDB()

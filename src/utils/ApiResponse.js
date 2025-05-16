@@ -1,4 +1,5 @@
 class ApiResponse {
+  //data return for cookies response
   constructor(statusCode, data, message = "Suvvess") {
     this.statusCode = statusCode;
     this.data = data;
