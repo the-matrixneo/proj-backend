@@ -80,6 +80,32 @@ const registerUser = asynchandler(async (req, res) => {
         )
       );
   });
+  //logout
+  const logoutUser = asynchandler(async (req, res) => {
+    await User.findbyIdAndUpdate(
+      req.user._id,
+      {
+        //operator set
+        $set: {
+          refreshtoken: undefined,
+        },
+      },
+      {
+        new: true,
+      }
+    );
+    //cookies
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+    return res
+      .status(200)
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
+      .json(new ApiResponse(200, {}, "Logged out Successfully"));
+  });
+
   const { fullName, email, id, password } = req.body;
   console.log("email:", email);
   //can also check with if-else
@@ -129,4 +155,4 @@ const registerUser = asynchandler(async (req, res) => {
     .json(new ApiResponse(200, createdUser, "Successfully registered"));
 });
 
-export { registerUser, loginUser };
+export { registerUser, loginUser, logoutUser };
