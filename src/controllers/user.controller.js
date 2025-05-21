@@ -1,8 +1,10 @@
 import ApiError from "../utils/ApiError.js";
-import { asynchandler } from "../utils/AsyncHandler.js"; //helper file
+import { asyncHandler } from "../utils/AsyncHandler.js"; //helper file
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken";
+import { JsonWebTokenError } from "jsonwebtoken";
 //login functionality
 const generateAccessTokenandRefesehToken = async (UserId) => {
   try {
@@ -21,7 +23,7 @@ const generateAccessTokenandRefesehToken = async (UserId) => {
     throw new ApiError(500, "Something went wrong ");
   }
 };
-const registerUser = asynchandler(async (req, res) => {
+const registerUser = asyncHandler(async (req, res) => {
   //details from frontend
   //validation - not empty
   //user alredy registered? : username/email
@@ -32,7 +34,7 @@ const registerUser = asynchandler(async (req, res) => {
   //check user creation : return response / errror
 
   //json , form data -->
-  const loginUser = asynchandler(async (req, res) => {
+  const loginUser = asyncHandler(async (req, res) => {
     //req body -> data
     //email / usernmae
     //find user
@@ -40,6 +42,7 @@ const registerUser = asynchandler(async (req, res) => {
     //send secure cookies
     const { email, id, password } = req.body;
     if (!id || !email) {
+      // the ! sign outside bracket
       throw new ApiError(400, "Fill require field");
     }
     User.findOne({ $or: [{ id }, { email }] }); // find by any one method , operator in MongoDb
@@ -81,7 +84,7 @@ const registerUser = asynchandler(async (req, res) => {
       );
   });
   //logout
-  const logoutUser = asynchandler(async (req, res) => {
+  const logoutUser = asyncHandler(async (req, res) => {
     await User.findbyIdAndUpdate(
       req.user._id,
       {
@@ -104,6 +107,43 @@ const registerUser = asynchandler(async (req, res) => {
       .clearCookie("accessToken", options)
       .clearCookie("refreshToken", options)
       .json(new ApiResponse(200, {}, "Logged out Successfully"));
+  });
+  const refreshAccessToken = asyncHandler(async (req, res) => {
+    //refresh token -  access through cookies hit end pt
+    const verfiyRefreshToken =
+      req.cookies.refreshToken || req.body.refreshToken;
+    if (verfiyRefreshToken) {
+      throw new ApiError(400, "Not a valid token");
+    }
+    try {
+      const decodedToken = jwt.verify(
+        verfiyRefreshToken,
+        process.env.REFRESH_TOKEN_SECRET
+      );
+
+      const user = await User.findbyId(decodedToken?._id);
+      if (!user) {
+        throw new ApiError(401, "Request cannot be accessed");
+      }
+      //matching of encoded token and verfiyRefreshToken
+      if (verfiyRefreshToken !== user?.refreshToken) {
+        throw new ApiError(401, "expired token");
+      }
+      //new token generation
+      const options = {
+        httpOnly: true,
+        secure: true,
+      };
+      const { accessToken, refreshToken } =
+        await generateAccessTokenandRefesehToken(user._id);
+      return res
+        .status(200)
+        .cookie("refreshToken", refreshToken, options)
+        .cookie("accessToken", accesstoken, options)
+        .json(new ApiResponse(200, { accessToken, refreshToken }));
+    } catch (error) {
+      throw new ApiError(400, error?.message || "Invalid Token");
+    }
   });
 
   const { fullName, email, id, password } = req.body;
@@ -155,4 +195,4 @@ const registerUser = asynchandler(async (req, res) => {
     .json(new ApiResponse(200, createdUser, "Successfully registered"));
 });
 
-export { registerUser, loginUser, logoutUser };
+export { registerUser, loginUser, logoutUser, refreshAccessToken };

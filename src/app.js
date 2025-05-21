@@ -2,6 +2,10 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 const app = express();
+app.on("error:", () => {
+  console.log("Error has occured:", error);
+  throw error();
+});
 //middleware
 app.use(
   cors({
@@ -24,4 +28,4 @@ import userRouter from "./routes/user.route.js";
 //routes declaration
 app.use("/api/v1/users", userRouter);
 // https://localhost/register
-export default app;
+export { app };
