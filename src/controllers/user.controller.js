@@ -199,7 +199,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword, confirmPassword } = req.body;
   //validation of both password
   if (!(newPassword === confirmPassword)) {
-    return res.status(400).json({ msg: "New passwords do not match" });
+    return res.status(400).json(new ApiError(400, "password not matched"));
   }
   const user = await User.findbyId(req.user?._id);
   const isPasswordCorrect = user.isPasswordCorrect(oldPassword);
@@ -211,7 +211,9 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   await user.save({ validateBeforeSave: false }); //database in another continent
   return res.status(200).json(new ApiResponse(200, {}, "password changed"));
   const currentUser = asyncHandler(async (req, res) => {
-    return res.status(200).json(200, {}, req.user, "current user fetched");
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, req.user, "current user fetched"));
   });
 });
 // account details updated
@@ -240,6 +242,7 @@ const updateAvatar = asyncHandler(async (req, res) => {
   if (!avatarLocalPath) {
     throw new ApiError(400, "No avatar uploaded");
   }
+  // delete old image
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   if (!avatar.url) {
     throw new ApiError(400, "error on  avatar uploading");
@@ -280,6 +283,67 @@ const updateCoverImage = asyncHandler(async (req, res) => {
   ).select("-password");
   return res.status(200).json(new ApiResponse(200, user, "Avatar Updated"));
 });
+//aggregation pipeline
+const channelProfile = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!id?.trim) {
+    throw new ApiError(401, "username not found");
+  }
+  const channel = await User.aggregate([
+    {
+      $match: {
+        username: username?.tolowerCase(),
+      },
+    },
+    {
+      lookup: {
+        from: "subscriptions", // lowercase and plural
+        localField: "_id",
+        foreginFiled: "channels",
+        as: "subscribers",
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreginFiled: "subscribers",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers", //field : to count
+        },
+        channelsCount: {
+          $size: "$subscribedTo",
+        },
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        fullName: 1,
+        username: 1,
+        avatar: 1,
+        email: 1,
+        coverImage: 1,
+      },
+    },
+  ]);
+  if (!channel?.length) {
+    throw new ApiError(404, "does not exist");
+  }
+  return res.status(200).json(new ApiResponse(200, "success"));
+  // aggregates return: sorted documents
+});
 
 export {
   registerUser,
@@ -291,4 +355,5 @@ export {
   updateAccountDetails,
   updateAvatar,
   updateCoverImage,
+  channelProfile,
 };
